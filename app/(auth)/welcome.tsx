@@ -1,84 +1,76 @@
 import { Link } from 'expo-router'
 import React from 'react'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 export default function Welcome() {
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Bienvenido</Text>
-        <Text style={styles.subtitle}>Conecta con tus amigos y descubre nuevas experiencias</Text>
-        
+    <ImageBackground
+      source={require('../../assets/images/space-bg.png')} // 👈 ruta corregida
+      style={styles.container}
+    >
+      <View style={styles.overlay}>
+        {/* Nombres estilo galáctico */}
+        <View style={styles.logoContainer}>
+          <Text style={styles.logoText1}></Text>
+          <Text style={styles.logoText2}></Text>
+        </View>
+
+        {/* Botones en la parte inferior */}
         <View style={styles.buttonContainer}>
           <Link href="/(auth)/login" asChild>
             <TouchableOpacity style={styles.primaryButton}>
               <Text style={styles.primaryButtonText}>Iniciar Sesión</Text>
             </TouchableOpacity>
           </Link>
-          
+
           <Link href="/(auth)/register" asChild>
-            <TouchableOpacity style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Registrarse</Text>
+            <TouchableOpacity style={styles.primaryButton}>
+              <Text style={styles.primaryButtonText}>Registrarse</Text>
             </TouchableOpacity>
           </Link>
         </View>
       </View>
-    </View>
+    </ImageBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    resizeMode: 'cover',
   },
-  content: {
+  overlay: {
+    flex: 1,
+    justifyContent: 'space-between', // 👈 esto deja espacio libre al centro
     alignItems: 'center',
-    maxWidth: 300,
+    paddingVertical: 60, // da aire arriba y abajo
   },
-  title: {
-    fontSize: 32,
+  logoContainer: {
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  logoText1: {
+    fontSize: 40,
     fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 10,
+    color: '#ff7675', // rojo/naranja espacial
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#7f8c8d',
-    textAlign: 'center',
-    marginBottom: 40,
-    lineHeight: 22,
+  logoText2: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#a29bfe', // morado espacial
   },
   buttonContainer: {
-    width: '100%',
+    width: 220,
     gap: 15,
   },
   primaryButton: {
-    backgroundColor: '#3498db',
+    backgroundColor: '#000',
     paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 25,
+    borderRadius: 30,
     alignItems: 'center',
   },
   primaryButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-    borderWidth: 2,
-    borderColor: '#3498db',
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: '#3498db',
     fontSize: 16,
     fontWeight: '600',
   },
