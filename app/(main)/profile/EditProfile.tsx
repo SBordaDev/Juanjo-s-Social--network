@@ -87,7 +87,7 @@ export default function EditProfile() {
       console.error(error);
     } else {
       Alert.alert("Éxito", "Perfil actualizado correctamente");
-      router.push("/(main)/profile"); // 🚀 reemplazamos router.back()
+      router.push("../(main)/profile"); // 🚀 reemplazamos router.back()
     }
   };
 
