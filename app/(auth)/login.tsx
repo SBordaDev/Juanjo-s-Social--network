@@ -1,19 +1,18 @@
 import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Alert,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useAuth } from "../../context/AuthContext"; // 👈 importa el hook del contexto
+import { supabase } from "../../utils/supabase";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { signInWithEmail } = useAuth(); // 👈 método del contexto
   const router = useRouter();
 
   const handleLogin = async () => {
@@ -23,11 +22,15 @@ export default function Login() {
     }
 
     try {
-      await signInWithEmail(email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
 
       Alert.alert("Éxito", "Inicio de sesión exitoso 🎉");
 
-      // 👇 redirige al stack principal
       router.replace("/(main)");
     } catch (error: any) {
       Alert.alert("Error", error.message || "No se pudo iniciar sesión");
@@ -92,80 +95,18 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f8f9fa",
-    justifyContent: "center",
-    padding: 20,
-  },
-  content: {
-    maxWidth: 400,
-    alignSelf: "center",
-    width: "100%",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#2c3e50",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#7f8c8d",
-    textAlign: "center",
-    marginBottom: 32,
-  },
-  form: {
-    marginBottom: 24,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#2c3e50",
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#e1e8ed",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    backgroundColor: "#fff",
-  },
-  forgotPassword: {
-    color: "#3498db",
-    textAlign: "right",
-    fontSize: 14,
-    marginBottom: 24,
-  },
-  loginButton: {
-    backgroundColor: "#3498db",
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  loginButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  footerText: {
-    color: "#7f8c8d",
-    fontSize: 14,
-  },
-  signUpLink: {
-    color: "#3498db",
-    fontSize: 14,
-    fontWeight: "600",
-  },
+  container: { flex: 1, backgroundColor: "#f8f9fa", justifyContent: "center", padding: 20 },
+  content: { maxWidth: 400, alignSelf: "center", width: "100%" },
+  title: { fontSize: 28, fontWeight: "bold", color: "#2c3e50", textAlign: "center", marginBottom: 8 },
+  subtitle: { fontSize: 16, color: "#7f8c8d", textAlign: "center", marginBottom: 32 },
+  form: { marginBottom: 24 },
+  inputContainer: { marginBottom: 20 },
+  label: { fontSize: 14, fontWeight: "600", color: "#2c3e50", marginBottom: 8 },
+  input: { borderWidth: 1, borderColor: "#e1e8ed", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, backgroundColor: "#fff" },
+  forgotPassword: { color: "#3498db", textAlign: "right", fontSize: 14, marginBottom: 24 },
+  loginButton: { backgroundColor: "#3498db", paddingVertical: 16, borderRadius: 12, alignItems: "center" },
+  loginButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  footer: { flexDirection: "row", justifyContent: "center", alignItems: "center" },
+  footerText: { color: "#7f8c8d", fontSize: 14 },
+  signUpLink: { color: "#3498db", fontSize: 14, fontWeight: "600" },
 });
