@@ -1,8 +1,10 @@
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,6 +22,7 @@ export default function EditProfile() {
   const [bio, setBio] = useState("");
   const [website, setWebsite] = useState("");
   const [location, setLocation] = useState("");
+  const [avatar, setAvatar] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function EditProfile() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("username, bio, website, location")
+        .select("username, bio, website, location, avatar_url")
         .eq("id", user.id)
         .single();
 
@@ -47,6 +50,7 @@ export default function EditProfile() {
         setBio(data.bio || "");
         setWebsite(data.website || "");
         setLocation(data.location || "");
+        setAvatar(data.avatar_url || null);
       }
 
       setLoading(false);
@@ -54,6 +58,31 @@ export default function EditProfile() {
 
     fetchProfile();
   }, []);
+
+  const handlePickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setAvatar(result.assets[0].uri);
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setAvatar(result.assets[0].uri);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -67,11 +96,35 @@ export default function EditProfile() {
       return;
     }
 
+    let avatar_url = avatar;
+
+    // 🚀 Subir a Supabase Storage si es una nueva imagen local
+    if (avatar && avatar.startsWith("file://")) {
+      const ext = avatar.split(".").pop();
+      const fileName = `${user.id}.${ext}`;
+      const filePath = `avatars/${fileName}`;
+
+      const response = await fetch(avatar);
+      const blob = await response.blob();
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, blob, { upsert: true });
+
+      if (uploadError) {
+        console.error(uploadError);
+      } else {
+        const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+        avatar_url = data.publicUrl;
+      }
+    }
+
     const updates = {
       username,
       bio,
       website,
       location,
+      avatar_url,
       updated_at: new Date(),
     };
 
@@ -87,7 +140,7 @@ export default function EditProfile() {
       console.error(error);
     } else {
       Alert.alert("Éxito", "Perfil actualizado correctamente");
-      router.push("../(main)/profile"); // 🚀 reemplazamos router.back()
+      router.push("../(main)/profile");
     }
   };
 
@@ -101,6 +154,24 @@ export default function EditProfile() {
 
   return (
     <ScrollView style={styles.container}>
+      <View style={styles.avatarContainer}>
+        {avatar ? (
+          <Image source={{ uri: avatar }} style={styles.avatar} />
+        ) : (
+          <View style={[styles.avatar, styles.avatarPlaceholder]}>
+            <Text style={{ color: "#aaa" }}>No avatar</Text>
+          </View>
+        )}
+        <View style={styles.avatarButtons}>
+          <TouchableOpacity style={styles.avatarButton} onPress={handleTakePhoto}>
+            <Text style={styles.avatarButtonText}>📷</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.avatarButton} onPress={handlePickImage}>
+            <Text style={styles.avatarButtonText}>🖼️</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <Text style={styles.label}>Username</Text>
       <TextInput
         style={styles.input}
@@ -156,4 +227,10 @@ const styles = StyleSheet.create({
   saveButton: { backgroundColor: "#3897f0", paddingVertical: 12, borderRadius: 8, alignItems: "center", marginTop: 20 },
   saveButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  avatarContainer: { alignItems: "center", marginVertical: 20 },
+  avatar: { width: 120, height: 120, borderRadius: 60 },
+  avatarPlaceholder: { backgroundColor: "#eee", justifyContent: "center", alignItems: "center" },
+  avatarButtons: { flexDirection: "row", marginTop: 10 },
+  avatarButton: { marginHorizontal: 10, backgroundColor: "#3897f0", padding: 10, borderRadius: 30 },
+  avatarButtonText: { color: "#fff", fontSize: 18 },
 });
