@@ -32,7 +32,7 @@ export default function TabsLayout() {
                 }}
             />
 
-                       <Tabs.Screen
+            <Tabs.Screen
                 name="post"
                 options={{
                     title: 'post',
@@ -42,7 +42,7 @@ export default function TabsLayout() {
                 }}
             />
 
-                       <Tabs.Screen
+            <Tabs.Screen
                 name="reels"
                 options={{
                     title: 'reels',
@@ -52,8 +52,5 @@ export default function TabsLayout() {
                 }}
             />
         </Tabs>
-
-        
-
     );
 }
