@@ -1,7 +1,8 @@
+import VideoPlayerItem from "@/components/VideoPlayerItem";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../utils/supabase";
 
@@ -14,27 +15,50 @@ type Profile = {
   following_count: number;
 };
 
+type Post = {
+  id: string;
+  content: string | null;
+  media_url: string | null;
+  media_type: string | null;
+  created_at: string;
+};
+
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Cargar datos del perfil
   useEffect(() => {
     if (!user) return;
-    const fetchProfile = async () => {
+    const fetchProfileAndPosts = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, email, username, avatar_url, followers_count, following_count")
-        .eq("id", user.id)
-        .single();
-      if (error) console.error(error);
-      else setProfile(data);
+            const [{ data: profileData, error: profileError }, { data: postsData, error: postsError }] =
+            await Promise.all([
+              supabase
+                .from("profiles")
+                .select("id, email, username, avatar_url, followers_count, following_count")
+                .eq("id", user.id)
+                .single(),
+              supabase
+                .from("posts")
+                .select("id, content, media_url, media_type, created_at")
+                .eq("user_id", user.id)
+                .order("created_at", { ascending: false }),
+            ]);
+
+      if (profileError) console.error(profileError);
+      else setProfile(profileData);
+
+      if (postsError) console.error(postsError);
+      else setPosts(postsData || []);
+
       setLoading(false);
     };
-    fetchProfile();
+
+    fetchProfileAndPosts();
   }, [user]);
 
   // Cerrar sesión
@@ -109,6 +133,30 @@ export default function ProfileScreen() {
     );
   }
 
+  const renderPost = ({ item }: { item: Post }) => {
+  if (item.media_url) {
+    if (item.media_type === "video") {
+
+      return (
+        <View style={styles.postContainer}>
+          <VideoPlayerItem uri={item.media_url}/>
+          {item.content ? <Text style={styles.postText}>{item.content}</Text> : null}
+        </View>
+      );
+    } else {
+      // Si es imagen
+      return (
+        <View style={styles.postContainer}>
+          <Image source={{ uri: item.media_url }} style={styles.postMedia} />
+          {item.content ? <Text style={styles.postText}>{item.content}</Text> : null}
+        </View>
+      );
+    }
+  }
+
+  return null;
+};
+
   return (
     <View style={styles.container}>
       {/* Foto de perfil */}
@@ -138,6 +186,16 @@ export default function ProfileScreen() {
       <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
         <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
       </TouchableOpacity>
+
+      <Text style={styles.subtext}>Tus Post</Text>
+
+      {/* Lista de posts */}
+      <FlatList
+        data={posts}
+        renderItem={renderPost}
+        keyExtractor={(item) => item.id}
+        style={{ width: "100%", marginTop: 20 }}
+      />
     </View>
   );
 }
@@ -146,10 +204,19 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff", alignItems: "center", paddingTop: 60 },
   avatar: { width: 120, height: 120, borderRadius: 60, marginBottom: 16 },
   username: { fontSize: 20, fontWeight: "bold", marginBottom: 24 },
+  subtext: { fontSize: 15,fontWeight: "bold", marginBottom: 24 },
   statsContainer: { flexDirection: "row", marginBottom: 40 },
   stat: { alignItems: "center", marginHorizontal: 20 },
   statNumber: { fontSize: 18, fontWeight: "bold" },
   statLabel: { fontSize: 14, color: "#555" },
   logoutButton: { backgroundColor: "#E63946", paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 },
   logoutButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  postContainer: {
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderColor: "#ddd",
+    paddingBottom: 10,
+  },
+  postMedia: { width: "100%", height: 250, borderRadius: 10, backgroundColor: "#eee" },
+  postText: { marginTop: 8, fontSize: 14, paddingHorizontal: 10 },
 });
