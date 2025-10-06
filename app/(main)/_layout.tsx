@@ -12,7 +12,7 @@ export default function TabsLayout() {
                     borderTopColor: '#e0e0e0',
                 },
             }}
-        >
+        >   
             <Tabs.Screen
                 name="index"
                 options={{
@@ -22,6 +22,7 @@ export default function TabsLayout() {
                     ),
                 }}
             />
+            
             <Tabs.Screen
                 name="profile"
                 options={{
@@ -43,9 +44,9 @@ export default function TabsLayout() {
             />
 
             <Tabs.Screen
-                name="reels"
+                name="chat"
                 options={{
-                    title: 'reels',
+                    title: 'chat',
                     tabBarIcon: ({ color, size }) => (
                         <Foundation name="play-video" size={size} color={color} />
                     ),
