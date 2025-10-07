@@ -110,7 +110,7 @@ export default function PostScreen() {
     <View style={styles.container}>
       <TextInput
         style={styles.input}
-        placeholder="¿Qué estás pensando?"
+        placeholder="Agrega una descripción!"
         value={content}
         onChangeText={setContent}
         multiline
